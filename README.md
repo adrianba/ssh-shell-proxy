@@ -105,3 +105,24 @@ This produces:
 GOOS=windows GOARCH=amd64 go build -o ssh-shell-proxy-x64.exe .
 GOOS=windows GOARCH=arm64 go build -o ssh-shell-proxy-arm64.exe .
 ```
+
+## Releasing
+
+Releases are published automatically via GitHub Actions when a version tag is pushed.
+
+To create a new release:
+
+```bash
+git tag v0.2
+git push origin v0.2
+```
+
+This triggers the release workflow which builds both Windows binaries and publishes
+them as a GitHub release. The version number from the tag is embedded into the
+binaries and can be checked with `ssh-shell-proxy.exe --version`.
+
+You can also pass a version to the build script for local builds:
+
+```bash
+./build.sh 0.2
+```
