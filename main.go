@@ -14,6 +14,9 @@ import (
 // Using the absolute path avoids relying on PATH resolution.
 const wslPath = `C:\Windows\System32\wsl.exe`
 
+// version is the program version, set at build time via -ldflags.
+var version = "dev"
+
 func main() {
 	// run() returns an exit code; we pass it to os.Exit so that
 	// callers (e.g. SSH, scripts) see the correct status.
@@ -29,6 +32,12 @@ func run() int {
 	// starting in the user's Linux home directory (~).
 	if len(args) == 0 {
 		return execWSL("--distribution", "Debian", "--cd", "~")
+	}
+
+	// Show version and exit.
+	if args[0] == "-v" || args[0] == "-V" || args[0] == "--version" {
+		fmt.Printf("ssh-shell-proxy %s\n", version)
+		return 0
 	}
 
 	// "-c <command>" mode: behaves like "sh -c" — runs a command
