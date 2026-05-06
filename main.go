@@ -39,13 +39,12 @@ func run() int {
 			fmt.Fprintln(os.Stderr, "error: -c requires a command")
 			return 1
 		}
-		// The "--" tells wsl.exe that everything after it is the
-		// command to execute, not a WSL option. We append each
-		// argument individually so wsl.exe receives them as
-		// separate argv entries.
-		wslArgs := []string{"--distribution", "Debian", "--cd", "~", "--"}
-		wslArgs = append(wslArgs, remainder...)
-		return execWSL(wslArgs...)
+		// Join all arguments into a single command string and pass
+		// it to "sh -c" inside WSL. This ensures correct behavior
+		// regardless of whether the caller sends the command as
+		// separate args (Linux SSH) or a single string (Windows SSH).
+		command := strings.Join(remainder, " ")
+		return execWSL("--distribution", "Debian", "--cd", "~", "--", "sh", "-c", command)
 	}
 
 	// Anything else is unsupported — report what we received so
