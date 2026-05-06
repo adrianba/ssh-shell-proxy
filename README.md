@@ -1,30 +1,72 @@
 # ssh-shell-proxy
 
-A small Windows executable that launches a WSL Debian shell via `wsl.exe`.
+A Windows executable that acts as a default shell for OpenSSH Server, proxying
+connections into a WSL Debian instance. When you SSH into the Windows machine,
+you land directly in a Linux shell instead of `cmd.exe` or PowerShell.
 
-## Usage
+## How It Works
 
-**Interactive shell:**
+- **Interactive SSH session** (`ssh user@host`) — opens an interactive WSL Debian
+  shell in your Linux home directory.
+- **Remote command** (`ssh user@host ps -aux`) — runs the command inside WSL Debian
+  via `sh -c`, handling both Linux and Windows SSH client argument styles.
+- **Unsupported arguments** — prints an error to stderr.
 
+## Windows Setup
+
+### 1. Install OpenSSH Server
+
+OpenSSH Server is available as a Windows optional feature.
+
+**Via Settings:**
+
+Settings → System → Optional Features → Add a feature → **OpenSSH Server** → Install
+
+**Via PowerShell (as Administrator):**
+
+```powershell
+Add-WindowsCapability -Online -Name OpenSSH.Server~~~~0.0.1.0
 ```
-ssh-shell-proxy.exe
+
+Then start and enable the service:
+
+```powershell
+Start-Service sshd
+Set-Service -Name sshd -StartupType Automatic
 ```
 
-Opens a WSL Debian shell in your home directory.
+### 2. Install ssh-shell-proxy
 
-**Run a command:**
+Copy the appropriate `.exe` to a permanent location on the Windows machine, for example:
 
+```powershell
+Copy-Item ssh-shell-proxy-x64.exe C:\Program` Files\ssh-shell-proxy\ssh-shell-proxy.exe
 ```
-ssh-shell-proxy.exe -c "ls -la"
+
+Use `ssh-shell-proxy-arm64.exe` for ARM64 devices (e.g. Surface Pro X).
+
+### 3. Configure as Default Shell
+
+Set ssh-shell-proxy as the default shell for OpenSSH Server (PowerShell as Administrator):
+
+```powershell
+New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" `
+    -Name DefaultShell `
+    -Value "C:\Program Files\ssh-shell-proxy\ssh-shell-proxy.exe" `
+    -PropertyType String -Force
 ```
 
-Runs the command inside WSL Debian and exits.
+Restart the SSH service:
 
-**Any other arguments** will print an error to stderr.
+```powershell
+Restart-Service sshd
+```
 
-## Prerequisites
+Now when you SSH into the machine, you'll get a WSL Debian shell automatically.
 
-### Install Go
+## Building from Source
+
+### Prerequisites — Install Go
 
 Install or update Go using [webi](https://webinstall.dev/golang/) (no sudo required):
 
@@ -44,7 +86,7 @@ To update Go later:
 webi golang@stable
 ```
 
-## Building
+### Build
 
 Run the build script to compile for both Windows x64 and ARM64:
 
